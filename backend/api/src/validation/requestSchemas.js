@@ -34,15 +34,15 @@ const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/; // HH:MM or HH:MM:SS
 const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
 
 export const createOrderSchema = z.object({
-  pickup_address: z.string().min(5, "Pickup address is too short").max(255, "Pickup address is too long").optional(),
+  pickup_address: z.string().min(5, "Pickup address is too short").max(255, "Pickup address is too long"),
   pickup_lat: latitudeSchema,
   pickup_lng: longitudeSchema,
-  drop_address: z.string().min(5, "Drop address is too short").max(255, "Drop address is too long").optional(),
+  drop_address: z.string().min(5, "Drop address is too short").max(255, "Drop address is too long"),
   drop_lat: latitudeSchema,
   drop_lng: longitudeSchema,
   pickup_date: isoDateStringSchema,
   pickup_time: z.string().regex(timeRegex, "Time must be in HH:MM format").optional(),
-  goods_type: z.string().min(2, "Goods type must be specified").optional(),
+  goods_type: z.string().min(2, "Goods type must be specified"),
   weight_tonnes: coerceNumber(z.number().positive({ message: 'Must be greater than 0' }).max(100, "Weight exceeds maximum legal limits")),
   length_ft: coerceNumber(z.number().positive().max(60)).optional(),
   width_ft: coerceNumber(z.number().positive().max(15)).optional(),
@@ -108,7 +108,7 @@ export const updateMilestoneSchema = z.object({
 export const verifyDeliverySchema = z.object({
   otp: z.preprocess(
     (val) => (val === undefined || val === null) ? undefined : String(val),
-    z.string().regex(/^\d{6}$/, { message: 'OTP must be 6 digits' }).optional()
+    z.string().regex(/^\d{6}$/, { message: 'OTP must be 6 digits' })
   )
 });
 
@@ -124,14 +124,24 @@ export const changeDropSchema = z.object({
       .min(-180, { message: 'Must be greater than or equal to -180' })
       .max(180, { message: 'Must be less than or equal to 180' })
   ),
-}).strict();
+});
 
 export const cancelOrderSchema = z.object({
   reason: z.string().max(500).optional().nullable(),
 }).strict();
 
 export const updateWalletSchema = z.object({
-  wallet_address: z.string().regex(/^0x[a-fA-F0-9]{40}$/, 'Must be a valid 0x-prefixed 42-character wallet address'),
+  wallet_address: z.string().regex(
+    /^0x[a-fA-F0-9]{40}$/,
+    'Must be a valid 0x-prefixed 42-character wallet address'
+  ),
+}).strict();
+
+export const updateProfileSchema = z.object({
+  full_name: z.string().min(1, "Name is required").max(255, "Name is too long").optional(),
+  language: z.string().max(50, "Language is too long").optional(),
+  dark_mode: z.boolean().optional(),
+  is_online: z.boolean().optional(),
 }).strict();
 
 export const registerDeviceSchema = z.object({
@@ -141,4 +151,30 @@ export const registerDeviceSchema = z.object({
   platform: z.enum(['android', 'ios', 'web'], {
     invalid_type_error: 'platform must be one of: android, ios, web',
   }).default('android'),
+}).strict();
+
+export const createTicketSchema = z.object({
+  subject: z.string().transform((v) => v.trim()).pipe(
+    z.string().min(1, 'Subject is required').max(200, 'Subject must be 200 characters or fewer')
+  ),
+  category: z.string().transform((v) => v.trim()).pipe(
+    z.string().min(1, 'Category is required').max(50, 'Category must be 50 characters or fewer')
+  ),
+  description: z.string().max(5000, 'Description must be 5000 characters or fewer').optional(),
+}).strict();
+
+export const updateTicketSchema = z.object({
+  subject: z.string().min(1, 'Subject cannot be empty').max(200, 'Subject must be 200 characters or fewer').optional(),
+  category: z.string().min(1, 'Category cannot be empty').max(50, 'Category must be 50 characters or fewer').optional(),
+  description: z.string().max(5000, 'Description must be 5000 characters or fewer').optional(),
+  status: z.enum(['open', 'in_progress', 'resolved', 'closed'], {
+    invalid_type_error: "Status must be one of: open, in_progress, resolved, closed",
+  }).optional(),
+}).strict();
+
+export const updateProfileSchema = z.object({
+  full_name: z.string().max(100, 'Name must be 100 characters or fewer').optional(),
+  language: z.string().max(10, 'Language code must be 10 characters or fewer').optional(),
+  dark_mode: z.boolean().optional(),
+  is_online: z.boolean().optional(),
 }).strict();
