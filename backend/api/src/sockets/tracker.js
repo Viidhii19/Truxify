@@ -46,6 +46,7 @@ let telemetryMonitorInterval = null;
 const WS_UPGRADE_RATE_LIMIT = 5;
 const WS_UPGRADE_RATE_WINDOW_SECONDS = 60;
 const MAX_MSG_PER_SECOND = 10;
+const MAX_WS_PAYLOAD_BYTES = 64 * 1024; // 64KB for telemetry payloads
 const messageRateTracker = new WeakMap();
 
 function getClientIp(request) {
@@ -98,7 +99,10 @@ export function rejectWebSocketUpgrade(socket) {
  * Initialize WebSockets Server and bind event handlers
  */
 export function initWebSocketServer(server) {
-  const wss = new WebSocketServer({ noServer: true });
+  const wss = new WebSocketServer({
+    noServer: true,
+    maxPayload: MAX_WS_PAYLOAD_BYTES,
+  });
   wsServer = wss;
 
   server.on('upgrade', async (request, socket, head) => {
@@ -289,6 +293,11 @@ export async function handleTrackingMessage(ws, message) {
   }
 
   const messageText = message.toString();
+
+  if (Buffer.byteLength(messageText, 'utf8') > MAX_WS_PAYLOAD_BYTES) {
+    ws.close(1009, 'Message too large');
+    return;
+  }
 
   if (messageText === 'ping') {
     ws.isAlive = true;
