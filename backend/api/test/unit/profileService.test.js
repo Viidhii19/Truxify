@@ -79,6 +79,17 @@ describe('getProfile', () => {
     mockEqProfileMaybeSingle.mockResolvedValueOnce({ data: null, error: { message: 'Permission denied' } });
     await expect(getProfile('user-123')).rejects.toThrow('Permission denied');
   });
+
+  it('returns null when no matching profile is found', async () => {
+    supabaseRef.current = {
+      from: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+    };
+    const result = await getProfile('nonexistent-user');
+    expect(result).toBeNull();
+  });
 });
 
 describe('getCustomerStats', () => {
@@ -100,6 +111,17 @@ describe('getCustomerStats', () => {
   it('throws when supabase query returns an error', async () => {
     mockEqStatsMaybeSingle.mockResolvedValueOnce({ data: null, error: { message: 'Row not found' } });
     await expect(getCustomerStats('user-456')).rejects.toThrow('Row not found');
+  });
+
+  it('returns null when no customer stats are found', async () => {
+    supabaseRef.current = {
+      from: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+    };
+    const result = await getCustomerStats('new-user-without-stats');
+    expect(result).toBeNull();
   });
 });
 
@@ -125,5 +147,16 @@ describe('getDriverDetails', () => {
   it('throws when supabase query returns an error', async () => {
     mockEqDriverMaybeSingle.mockResolvedValueOnce({ data: null, error: { message: 'Driver profile not found' } });
     await expect(getDriverDetails('driver-789')).rejects.toThrow('Driver profile not found');
+  });
+
+  it('returns null when no driver details are found', async () => {
+    supabaseRef.current = {
+      from: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+    };
+    const result = await getDriverDetails('new-driver-without-details');
+    expect(result).toBeNull();
   });
 });
