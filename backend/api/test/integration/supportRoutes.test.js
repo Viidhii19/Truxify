@@ -122,7 +122,12 @@ describe('Support Routes', () => {
       .send({ subject: '   ', category: 'billing' });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toBe('subject and category are required.');
+    expect(res.body.error).toBe('Validation failed');
+    expect(res.body.details).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ field: 'subject', message: 'Subject is required' }),
+      ])
+    );
   });
 
   it('POST /tickets creates an open ticket for the authenticated user with category mapping and description', async () => {
@@ -341,7 +346,7 @@ describe('Support Routes', () => {
         .send({ status: 'in_progress' });
 
       expect(res.status).toBe(403);
-      expect(res.body.error).toBe('Access Denied: Only admins can change tickets to this status.');
+      expect(res.body.error).toBe('Access Denied: Only admins can change ticket status.');
     });
 
     it('allows admin to change status to in_progress or resolved', async () => {

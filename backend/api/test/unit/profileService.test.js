@@ -2,9 +2,13 @@
  * Unit tests for backend/api/src/services/profileService.js
  *
  * Coverage:
- *   - getProfile: returns data on success, throws on error
- *   - getCustomerStats: returns data on success, throws on error
- *   - getDriverDetails: returns data on success, throws on error
+ *   - getProfile throws when supabase is null (fail-fast on misconfiguration)
+ *   - getProfile calls supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+ *   - getProfile throws when supabase query returns an error
+ *   - getCustomerStats throws when supabase is null (fail-fast on misconfiguration)
+ *   - getCustomerStats queries customer_stats table correctly
+ *   - getDriverDetails throws when supabase is null (fail-fast on misconfiguration)
+ *   - getDriverDetails queries driver_details table correctly
  *
  * Run with:  npm run test:unit -- test/unit/profileService.test.js
  */
@@ -55,8 +59,14 @@ vi.mock('../../src/config/db.js', () => ({
 
 import { getProfile, getCustomerStats, getDriverDetails } from '../../src/services/profileService.js';
 
-describe('profileService — getProfile', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+describe('getProfile', () => {
+  beforeEach(() => {
+    supabaseRef.current = null;
+  });
+
+  it('throws when supabase is not configured', async () => {
+    await expect(getProfile('user-123')).rejects.toThrow('Supabase client not configured');
+  });
 
   it('returns profile data on successful query', async () => {
     const mockData = { id: 'user-123', firebase_uid: 'fb-uid', role: 'driver', full_name: 'John', phone: '+919876543210' };
@@ -71,8 +81,14 @@ describe('profileService — getProfile', () => {
   });
 });
 
-describe('profileService — getCustomerStats', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+describe('getCustomerStats', () => {
+  beforeEach(() => {
+    supabaseRef.current = null;
+  });
+
+  it('throws when supabase is not configured', async () => {
+    await expect(getCustomerStats('user-123')).rejects.toThrow('Supabase client not configured');
+  });
 
   it('returns customer stats on successful query', async () => {
     const mockData = { total_orders: 42, total_saved: 8, co2_reduced_kg: 156.5 };
@@ -87,8 +103,14 @@ describe('profileService — getCustomerStats', () => {
   });
 });
 
-describe('profileService — getDriverDetails', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+describe('getDriverDetails', () => {
+  beforeEach(() => {
+    supabaseRef.current = null;
+  });
+
+  it('throws when supabase is not configured', async () => {
+    await expect(getDriverDetails('driver-789')).rejects.toThrow('Supabase client not configured');
+  });
 
   it('returns driver details on successful query', async () => {
     const mockData = {
