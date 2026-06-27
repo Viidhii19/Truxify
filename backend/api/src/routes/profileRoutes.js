@@ -1,8 +1,9 @@
 import express from 'express';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { userLimiter } from '../middleware/rateLimiter.js';
-import { validateBody, validateQuery } from '../middleware/validate.js';
-import { updateProfileSchema, updateWalletSchema, driverStatementSchema } from '../validation/requestSchemas.js';
+import { validateBody, validateQuery, validateParams } from '../middleware/validate.js';
+import { updateProfileSchema, updateWalletSchema, driverStatementSchema, paramIdSchema } from '../validation/requestSchemas.js';
+import logger from '../middleware/logger.js';
 import {
   getProfile,
   getCustomerStats,
@@ -11,12 +12,6 @@ import {
 import { supabase } from '../config/db.js';
 import { ProfileModel } from '../models/ProfileModel.js';
 import { invalidateCachedProfile, invalidateCachedSupabaseProfile } from '../lib/profileCache.js';
-import { validateParams } from '../middleware/validate.js';
-import { paramIdSchema } from '../validation/requestSchemas.js';
-import logger from '../middleware/logger.js';
-import { updateProfileSchema } from '../schemas/profile.js';
-import { updateWalletSchema } from '../validation/requestSchemas.js';
-
 const router = express.Router();
 
 // GET PROFILE
@@ -240,7 +235,6 @@ router.put('/fcm-token', authenticate, userLimiter, async (req, res) => {
   }
 });
 
-export default router;
 // GET DRIVER STATEMENT
 router.get('/driver/statement', authenticate, requireRole(['driver']), userLimiter, validateQuery(driverStatementSchema), async (req, res) => {
   const userId = req.user.id;
@@ -309,6 +303,9 @@ router.get('/driver/statement', authenticate, requireRole(['driver']), userLimit
     });
   } catch (err) {
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
+  }
+});
+
 // ADMIN CACHE INVALIDATION
 // Invalidates the profile cache for a specific user, forcing the next
 // authenticated request to refetch from Supabase. Use this after admin

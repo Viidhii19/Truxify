@@ -23,38 +23,9 @@ const CATEGORY_MAP = {
   account: 'account',
 };
 
-// The unique set of valid DB-level category values.
-const VALID_CATEGORIES = [...new Set(Object.values(CATEGORY_MAP))];
-
-// Human-readable labels for each DB-level category value.
-const CATEGORY_LABELS = {
-  payment: 'Payment & Billing',
-  order: 'Order & Booking',
-  technical: 'Technical Issue',
-  general: 'General Enquiry',
-  account: 'Account Management',
-};
-
 function normalizeRequiredText(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
-
-// ============================================================================
-// 0. GET SUPPORT TICKET CATEGORIES (PUBLIC - no auth required)
-// ============================================================================
-/**
- * GET /api/support/categories
- *
- * Returns the list of valid accepted support ticket category values.
- * Public so onboarding screens / mobile apps can populate dropdowns
- * without needing a user session.
- */
-router.get('/categories', (_req, res) => {
-  res.json({
-    categories: VALID_CATEGORIES,
-    labels: CATEGORY_LABELS,
-  });
-});
 
 // ============================================================================
 // 1. LIST ACTIVE FAQS (PUBLIC)
@@ -91,16 +62,21 @@ router.get('/faqs', async (req, res) => {
 // ============================================================================
 // 2. LIST VALID TICKET CATEGORIES (PUBLIC)
 // ============================================================================
-const VALID_CATEGORIES = [
-  { value: 'billing', label: 'Billing and Payment', description: 'Issues related to payments, invoices, and charges' },
-  { value: 'booking', label: 'Booking and Orders', description: 'Issues related to load bookings and order management' },
-  { value: 'technical', label: 'Technical Issues', description: 'App crashes, bugs, and technical difficulties' },
-  { value: 'account', label: 'Account and Access', description: 'Login problems, account settings, and access issues' },
-  { value: 'general', label: 'General Inquiry', description: 'Questions and inquiries not covered by other categories' },
-];
+const VALID_CATEGORIES = [...new Set(Object.values(CATEGORY_MAP))];
 
-router.get('/categories', async (req, res) => {
-  res.json(VALID_CATEGORIES);
+const CATEGORY_LABELS = {
+  payment: 'Payment & Billing',
+  order: 'Order & Booking',
+  technical: 'Technical Issue',
+  general: 'General Enquiry',
+  account: 'Account Management',
+};
+
+router.get('/categories', (_req, res) => {
+  res.json({
+    categories: VALID_CATEGORIES,
+    labels: CATEGORY_LABELS,
+  });
 });
 
 // ============================================================================
