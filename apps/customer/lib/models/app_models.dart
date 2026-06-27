@@ -180,6 +180,10 @@ class HistoryOrderData {
     required this.truckNumber,
     required this.timeline,
     this.blockchainTxHash,
+    this.baseFare,
+    this.distanceCharge,
+    this.tollCharge,
+    this.platformFee,
   });
 
   final String orderId;
@@ -191,6 +195,10 @@ class HistoryOrderData {
   final String truckNumber;
   final List<TimelineStepData> timeline;
   final String? blockchainTxHash;
+  final String? baseFare;
+  final String? distanceCharge;
+  final String? tollCharge;
+  final String? platformFee;
 }
 
 class TimelineStepData {
