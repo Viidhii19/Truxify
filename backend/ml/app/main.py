@@ -235,7 +235,7 @@ class RecommendOutput(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Schemas — Trust & Risk Scorer
+# Trust & Risk Scorer
 # ---------------------------------------------------------------------------
 
 class TrustScoreInput(BaseModel):
@@ -252,7 +252,7 @@ class TrustScoreOutput(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Schemas — Deadhead Eliminator
+# Deadhead Eliminator
 # ---------------------------------------------------------------------------
 
 class LocationPoint(BaseModel):
@@ -293,7 +293,7 @@ class DeadheadOutput(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Schemas — Mid-Trip Reoptimiser
+# Mid-Trip Reoptimiser
 # ---------------------------------------------------------------------------
 
 class AvailableCapacity(BaseModel):
@@ -348,7 +348,8 @@ async def root(_auth=Depends(verify_api_key)):
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy"}
+    """Health check endpoint for Docker container orchestration."""
+    return {"status": "healthy", "service": "ml-engine"}
 
 
 # ---------------------------------------------------------------------------
