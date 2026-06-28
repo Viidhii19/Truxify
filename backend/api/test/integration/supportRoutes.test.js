@@ -521,7 +521,7 @@ describe('Support Routes', () => {
       expect(res.body[0].message).toBe('Hello');
     });
 
-    it('GET /tickets/:id/comments supports limit and offset pagination', async () => {
+    it('GET /tickets/:id/comments supports sort=desc for descending chronological sorting', async () => {
       m.store.support_ticket_comments.push(
         { id: 'c-1', ticket_id: 't-123', user_id: 'customer-1', message: 'First', created_at: '2026-06-01T00:00:00.000Z' },
         { id: 'c-2', ticket_id: 't-123', user_id: 'customer-1', message: 'Second', created_at: '2026-06-02T00:00:00.000Z' }
@@ -551,6 +551,8 @@ describe('Support Routes', () => {
       expect(res.body.categories).toContain('account');
       expect(res.body.labels).toBeDefined();
       expect(typeof res.body.labels.payment).toBe('string');
+      expect(res.body.descriptions).toBeDefined();
+      expect(res.body.descriptions.payment).toContain('billing');
     });
 
     it('categories array contains no duplicates', async () => {
