@@ -18,10 +18,17 @@ class LocationService {
   StreamSubscription<Position>? _positionSubscription;
   Timer? _reconnectTimer;
   Timer? _heartbeatTimer;
+  Timer? _maxIntervalTimer; // Fallback for max 30 seconds without ping
   bool _isTracking = false;
   String? _activeOrderId;
   String? _activeOrderDisplayId;
   int _reconnectAttempts = 0;
+  Position? _lastSentPosition;
+  DateTime? _lastSentTime;
+
+  // Throttling configuration: send ping if moved 15m+ OR 30 seconds passed
+  static const double _minDistanceMeters = 15.0;
+  static const Duration _maxInterval = Duration(seconds: 30);
 
   bool get isTracking => _isTracking;
 
@@ -38,6 +45,9 @@ class LocationService {
     debugPrint('[LocationService] Stopping driver location tracking...');
     _positionSubscription?.cancel();
     _positionSubscription = null;
+    _maxIntervalTimer?.cancel();
+    _maxIntervalTimer = null;
+    _lastSentPosition = null;
     _closeWebSocket();
   }
 
@@ -46,16 +56,60 @@ class LocationService {
     _positionSubscription = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 10, // send ping every 10 meters
+        distanceFilter: 10, // Geolocator filters to 10m minimum movement
       ),
     ).listen(
       (position) {
-        _sendLocationPing(position);
+        _handleLocationUpdate(position);
       },
       onError: (error) {
         debugPrint('[LocationService] Position stream error: $error');
       },
     );
+
+    // Fallback timer: ensure a ping is sent at least every 30 seconds
+    _maxIntervalTimer?.cancel();
+    _maxIntervalTimer = Timer.periodic(_maxInterval, (_) {
+      if (_lastSentPosition != null && _isTracking) {
+        debugPrint('[LocationService] Max interval elapsed, sending fallback ping');
+        _sendLocationPing(_lastSentPosition!);
+      }
+    });
+  }
+
+  void _handleLocationUpdate(Position position) {
+    // Implement displacement-based throttling
+    if (_lastSentPosition == null) {
+      // First position, always send
+      _sendLocationPing(position);
+      _lastSentPosition = position;
+      _lastSentTime = DateTime.now();
+      return;
+    }
+
+    final now = DateTime.now();
+    final timeSinceLastSend = now.difference(_lastSentTime!);
+
+    // Calculate distance moved using Geolocator
+    final distanceMoved = Geolocator.distanceBetween(
+      _lastSentPosition!.latitude,
+      _lastSentPosition!.longitude,
+      position.latitude,
+      position.longitude,
+    );
+
+    // Send if: moved 15m+ OR max interval (30s) has elapsed
+    if (distanceMoved >= _minDistanceMeters ||
+        timeSinceLastSend.compareTo(_maxInterval) >= 0) {
+      _sendLocationPing(position);
+      _lastSentPosition = position;
+      _lastSentTime = now;
+    } else {
+      debugPrint(
+        '[LocationService] Location update throttled (moved ${distanceMoved.toStringAsFixed(1)}m, '
+        'max is ${_minDistanceMeters}m)',
+      );
+    }
   }
 
   Future<void> _sendLocationPing(Position position) async {
